@@ -1,20 +1,23 @@
 package de.fred.microservices.currencyexchangeservice.controller;
 
+import de.fred.microservices.currencyexchangeservice.Repository.CurrencyExchangeRepository;
 import de.fred.microservices.currencyexchangeservice.model.CurrencyExchange;
 import org.springframework.core.env.Environment;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.math.BigDecimal;
+import java.util.Optional;
 
 @RestController
 public class CurrencyExchangeController {
 
     private Environment environment;
+    private CurrencyExchangeRepository currencyExchangeRepository;
 
-    public CurrencyExchangeController(Environment environment) {
+    public CurrencyExchangeController(Environment environment, CurrencyExchangeRepository currencyExchangeRepository) {
         this.environment = environment;
+        this.currencyExchangeRepository = currencyExchangeRepository;
     }
 
     @GetMapping("/currency-exchange/from/{from}/to/{to}")
@@ -23,7 +26,11 @@ public class CurrencyExchangeController {
             @PathVariable String to
     ) {
 
-        CurrencyExchange currencyExchange = new CurrencyExchange(1000L, from, to, BigDecimal.valueOf(50));
+        Optional<CurrencyExchange> currencyExchangeOptional = currencyExchangeRepository.findByFromAndTo(from, to);
+        if (currencyExchangeOptional.isEmpty())
+            throw new CurrencyExchangeException("Currency Exchange für " + from + " in " + to + " nicht gefunden.");
+
+        CurrencyExchange currencyExchange = currencyExchangeOptional.get();
         String port = environment.getProperty("local.server.port");
         currencyExchange.setEnvironment(port);
         return currencyExchange;
