@@ -1,0 +1,16 @@
+gcloud config set project playground-s-11-aa516e02 
+
+gcloud container clusters get-credentials test-cluster --zone europe-west1-d
+
+kubectl create deployment currency-exchange --image=fredbase/mmv3-currency-exchange-service:0.0.11-SNAPSHOT
+kubectl expose deployment currency-exchange --type=LoadBalancer --port=8001
+
+http://34.78.220.206:8001/currency-exchange/from/USD/to/INR
+
+kubectl create deployment currency-conversion --image=fredbase/mmv3-currency-conversion-service:0.0.11-SNAPSHOT
+kubectl expose deployment currency-conversion --type=LoadBalancer --port=8100
+
+http://34.77.65.117:8100/currency-conversion-feign/from/USD/to/INR/quantity/10
+
+k rollout history deployment currency-exchange
+k rollout undo deployment currency-exchange --to-revision=1
